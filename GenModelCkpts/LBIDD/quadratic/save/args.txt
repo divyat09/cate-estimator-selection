@@ -1,0 +1,33 @@
+{
+    "data": "lbidd_quadratic_50k",
+    "dataroot": "/home/mila/r/raghupas/causal-benchmark/datasets",
+    "saveroot": "save",
+    "train": true,
+    "eval": true,
+    "overwrite_reload": "",
+    "dist": "SigmoidFlow",
+    "dist_args": [
+        "ndim=8",
+        "base_distribution=normal"
+    ],
+    "atoms": [],
+    "n_hidden_layers": 1,
+    "dim_h": 4,
+    "activation": "ReLU",
+    "lr": 0.001,
+    "batch_size": 25000,
+    "num_epochs": 3000,
+    "early_stop": true,
+    "patience": null,
+    "ignore_w": false,
+    "grad_norm": Infinity,
+    "test_size": null,
+    "w_transform": "Standardize",
+    "y_transform": "Standardize",
+    "train_prop": 0.5,
+    "val_prop": 0.1,
+    "test_prop": 0.4,
+    "seed": 123,
+    "comet": true,
+    "num_univariate_tests": 100
+}
