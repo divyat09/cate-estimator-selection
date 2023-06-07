@@ -1,0 +1,35 @@
+{
+    "data": "lalonde_cps1",
+    "dataroot": "/home/mila/r/raghupas/causal-benchmark/datasets",
+    "saveroot": "./experiments/sigmoidflow_lalonde_cps1/dist_argsndim=32+base_distribution=normal-n_hidden_layers2-dim_h64-lr0.001-w_transformStandardize",
+    "train": true,
+    "eval": true,
+    "overwrite_reload": "",
+    "dist": "SigmoidFlow",
+    "dist_args": [
+        "ndim=32",
+        "base_distribution=normal"
+    ],
+    "atoms": [
+        0.0,
+        25564.669921875
+    ],
+    "n_hidden_layers": 2,
+    "dim_h": 64,
+    "activation": "ReLU",
+    "lr": 0.001,
+    "batch_size": 4096,
+    "num_epochs": 2000,
+    "early_stop": true,
+    "ignore_w": false,
+    "grad_norm": Infinity,
+    "test_size": null,
+    "w_transform": "Standardize",
+    "y_transform": "Normalize",
+    "train_prop": 0.5,
+    "val_prop": 0.1,
+    "test_prop": 0.4,
+    "seed": 123,
+    "comet": true,
+    "num_univariate_tests": 100
+}

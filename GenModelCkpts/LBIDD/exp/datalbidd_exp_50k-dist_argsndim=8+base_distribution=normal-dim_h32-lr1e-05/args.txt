@@ -1,0 +1,30 @@
+{
+    "data": "lbidd_exp_50k",
+    "dataroot": "/home/mila/r/raghupas/causal-benchmark/datasets",
+    "saveroot": "./experiments/sigmoidflow_lbidd_test5000/datalbidd_exp_50k-dist_argsndim=8+base_distribution=normal-dim_h32-lr1e-05",
+    "train": true,
+    "eval": true,
+    "overwrite_reload": "",
+    "dist": "SigmoidFlow",
+    "dist_args": [
+        "ndim=8",
+        "base_distribution=normal"
+    ],
+    "atoms": [],
+    "n_hidden_layers": 1,
+    "dim_h": 32,
+    "activation": "ReLU",
+    "lr": 1e-05,
+    "batch_size": 64,
+    "num_epochs": 100,
+    "early_stop": true,
+    "ignore_w": false,
+    "grad_norm": 0.5,
+    "w_transform": "Standardize",
+    "y_transform": "Standardize",
+    "train_prop": 0.5,
+    "val_prop": 0.1,
+    "test_prop": 0.4,
+    "seed": 123,
+    "num_univariate_tests": 100
+}
