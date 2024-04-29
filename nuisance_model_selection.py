@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import pandas as pd
 import time
@@ -6,27 +7,37 @@ import os
 from pathlib import Path
 import argparse
 import pickle
-
-from utils.helpers import *
-from data.loading import load_from_folder
-from data.lbidd import lbidd_main_loader
-
-from sklearn.model_selection import cross_val_score
-from sklearn.base import clone
-
 import warnings
+from typing import Tuple
 
+import sklearn
+from sklearn.model_selection import cross_val_score
 from flaml import AutoML
 
-def get_propensity_model(prop_model, w, t, automl_settings={}):
+from data.samplers import load_dataset_obj, sample_dataset
+from utils.consts import NUISANCE_MODEL_CASES
 
+def get_propensity_model(prop_model: AutoML, w: np.ndarray, t: np.ndarray, automl_settings={}) -> Tuple[float, sklearn.base.BaseEstimator]:
+    """
+    Tune hyperparameters using AutoML for the propensity models
+
+    Inputs:
+        out_model: AutoML object for tuning hyperparameters
+        w: Dictionary containing the covariate data for training and evaluation; expected shape for values (num_samples, covariate dimension)
+        t: Dictionary containing the treatment data for training and evaluation; expected shape for values (num_samples, 1)
+        automl_settings: Dictionary containing the settings for AutoML
+    
+    Returns:
+        score: Cross validation score for the optimal model
+        model: Optimal nuisance model
+    """
     for key in t.keys():
         data_size= w[key].shape[0]
         t[key]= np.reshape(t[key], (data_size))
     
     #Propensity Model    
     prop_model.fit(X_train=w['tr'], y_train=t['tr'], **automl_settings)
-    model = clone(prop_model.model.estimator)
+    model = sklearn.base.clone(prop_model.model.estimator)
 
     model.fit(w['te'], t['te'])
     score= model.score(w['te'], t['te'])
@@ -34,7 +45,22 @@ def get_propensity_model(prop_model, w, t, automl_settings={}):
     return score, model
 
 
-def get_outcome_model(out_model, w, t, y, case='t_0', automl_settings={}):
+def get_outcome_model(out_model: AutoML, w: np.ndarray, t: np.ndarray, y: np.ndarray, case: str='t_0', automl_settings={}) -> Tuple[float, sklearn.base.BaseEstimator]:
+    """
+    Tune hyperparameters using AutoML for the T-Learner nuisance models
+
+    Inputs:
+        out_model: AutoML object for tuning hyperparameters
+        w: Dictionary containing the covariate data for training and evaluation; expected shape for values (num_samples, covariate dimension)
+        t: Dictionary containing the treatment data for training and evaluation; expected shape for values (num_samples, 1)
+        y: Dictionary containing the outcome data for training and evaluation; expected shape for values (num_samples, 1)
+        case: 't_0' or 't_1' to decide the treatment group
+        automl_settings: Dictionary containing the settings for AutoML
+    
+    Returns:
+        score: Cross validation score for the optimal model
+        model: Optimal nuisance model
+    """
 
     for key in t.keys():
         data_size= w[key].shape[0]
@@ -50,7 +76,7 @@ def get_outcome_model(out_model, w, t, y, case='t_0', automl_settings={}):
         indices_eval= t['te'] == 1
 
     out_model.fit(X_train=w['tr'][indices, :], y_train=y['tr'][indices], **automl_settings)
-    model = clone(out_model.model.estimator)
+    model = sklearn.base.clone(out_model.model.estimator)
 
     model.fit(w['te'][indices_eval, :], y['te'][indices_eval])
     score = model.score(w['te'][indices_eval, :], y['te'][indices_eval])
@@ -58,8 +84,22 @@ def get_outcome_model(out_model, w, t, y, case='t_0', automl_settings={}):
     return score, model
 
 
-def get_s_learner_model(out_model, w, t, y, automl_settings={}):
+def get_s_learner_model(out_model: AutoML, w: np.ndarray, t: np.ndarray, y: np.ndarray, automl_settings={}) -> Tuple[float, sklearn.base.BaseEstimator]:
+    """
+    Tune hyperparameters using AutoML for the S-Learner nuisance models
+
+    Inputs:
+        out_model: AutoML object for tuning hyperparameters
+        w: Dictionary containing the covariate data for training and evaluation; expected shape for values (num_samples, covariate dimension)
+        t: Dictionary containing the treatment data for training and evaluation; expected shape for values (num_samples, 1)
+        y: Dictionary containing the outcome data for training and evaluation; expected shape for values (num_samples, 1)
+        automl_settings: Dictionary containing the settings for AutoML
     
+    Returns:
+        score: Cross validation score for the optimal model
+        model: Optimal nuisance model
+    """
+
     for key in t.keys():
         data_size= w[key].shape[0]
         t[key]= np.reshape(t[key], (data_size, 1))
@@ -73,7 +113,7 @@ def get_s_learner_model(out_model, w, t, y, automl_settings={}):
     w_upd['tr']= np.hstack([w['tr'],t['tr']])
 
     out_model.fit(X_train=w_upd['tr'], y_train=y['tr'], **automl_settings)
-    model = clone(out_model.model.estimator)
+    model = sklearn.base.clone(out_model.model.estimator)
 
     model.fit(w_upd['te'], y['te'])
     score = model.score(w_upd['te'], y['te'])
@@ -81,7 +121,20 @@ def get_s_learner_model(out_model, w, t, y, automl_settings={}):
     return score, model
 
 
-def get_r_score_model(out_model, w, y, automl_settings={}):
+def get_r_score_model(out_model: AutoML, w: np.ndarray, y: np.ndarray, automl_settings={}) -> Tuple[float, sklearn.base.BaseEstimator]:
+    """
+    Tune hyperparameters using AutoML for the R-Score/DML nuisance models
+
+    Inputs:
+        out_model: AutoML object for tuning hyperparameters
+        w: Dictionary containing the covariate data for training and evaluation; expected shape for values (num_samples, covariate dimension)
+        y: Dictionary containing the outcome data for training and evaluation; expected shape for values (num_samples, 1)
+        automl_settings: Dictionary containing the settings for AutoML
+    
+    Returns:
+        score: Cross validation score for the optimal model
+        model: Optimal nuisance model
+    """
     
     for key in t.keys():    
         data_size= w[key].shape[0]
@@ -91,7 +144,7 @@ def get_r_score_model(out_model, w, y, automl_settings={}):
     #Since these nuisance models would be used as part of the metric computation, we train them on the actual evaluation/validation set and test on the actual training test    
 
     out_model.fit(X_train=w['tr'], y_train=y['tr'], **automl_settings)
-    model = clone(out_model.model.estimator)
+    model = sklearn.base.clone(out_model.model.estimator)
 
     #Fitting on test set for the purposes of computing the metric
     model.fit(w['te'], y['te'])
@@ -103,9 +156,9 @@ def get_r_score_model(out_model, w, y, automl_settings={}):
 # Input Parsing
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='twins',
-                    help='Datasets: lalonde_psid1; lalonde_cps1; twins; lbidd')
+                    help='Datasets: lalonde_psid1; lalonde_cps1; twins; acic')
 parser.add_argument('--seed', type=int, default=0,
-                    help='Total seeds for causal effect estimation experiments')
+                    help='Random seed for causal effect estimation experiments')
 parser.add_argument('--root_dir', type=str, default='/scratch/cate_eval_analysis/')
 parser.add_argument('--res_dir', type=str, default='results_final')
 parser.add_argument('--slurm_exp', type=int, default=0,
@@ -114,18 +167,10 @@ parser.add_argument('--slurm_exp', type=int, default=0,
 args = parser.parse_args()
 print(vars(args))
 
-NUISANCE_MODEL_CASES= ['t_learner_0', 't_learner_1', 's_learner', 'dml', 'prop']
-
 #Experiments on Slurm
 if args.slurm_exp:
-    # dataset_list = ['twins', 'lalonde_psid1', 'lalonde_cps1', 'orthogonal_ml_dgp']
-    # for idx in range(100):
-    #     dataset_list.append('lbidd_' + str(idx))
-    # for idx in range(77):
-    #     dataset_list.append('acic_2016_' + str(idx))
-
+    #dataset_list = ['twins', 'lalonde_psid1', 'lalonde_cps1']
     dataset_list = pickle.load(open('datasets/acic_2016_heterogenous_list.p', "rb"))
-    # dataset_list = pickle.load(open('datasets/acic_2018_heterogenous_list.p', "rb"))
 
     slurm_idx = int(os.environ["SLURM_ARRAY_TASK_ID"])
     args.dataset = dataset_list[slurm_idx]
@@ -137,30 +182,25 @@ res_dir= args.res_dir
 
 #Create Logs Directory
 RESULTS_DIR = root_dir + str(Path(res_dir))
-# Loop over datasets, seeds, estimators with their hyperparams and nusiance models
+
+#Fix random seed
 print('SEED: ', seed)
 random.seed(seed)
 np.random.seed(seed)
 
+# Load dataset with true ITE, ATE from the generative model
 print('DATASET:', dataset_name)
-dataset_name, dataset_obj = load_dataset_obj(args.dataset, root_dir)
+dataset_obj = load_dataset_obj(dataset= dataset_name, root_dir= root_dir, seed= seed)
 
-# grid_models= get_nusiance_models_grid(outcome_models, prop_models, approx=True, grid_size= grid_size)
-dataset_samples= sample_dataset(dataset_name, dataset_obj, seed=seed, case='train')
+dataset_samples= sample_dataset(dataset_obj, case='train')
 train_w, train_t, train_y= dataset_samples['w'], dataset_samples['t'], dataset_samples['y']
 
-dataset_samples= sample_dataset(dataset_name, dataset_obj, seed=seed, case='eval')
+dataset_samples= sample_dataset(dataset_obj, case='eval')
 eval_w, eval_t, eval_y, ate, ite= dataset_samples['w'], dataset_samples['t'], dataset_samples['y'], dataset_samples['ate'], dataset_samples['ite']
 
 w= { 'tr': train_w, 'te': eval_w, 'all': np.concatenate((train_w, eval_w), axis=0)}
 t= { 'tr': train_t, 'te': eval_t, 'all': np.concatenate((train_t, eval_t), axis=0) }
 y= { 'tr': train_y, 'te': eval_y, 'all': np.concatenate((train_y, eval_y), axis=0) }
-
-# print('Shape Check')
-# print(w['tr'].shape, w['te'].shape, w['all'].shape)
-# print(t['tr'].shape, t['te'].shape, t['all'].shape)
-# print(y['tr'].shape, y['te'].shape, y['all'].shape)
-# sys.exit()
 
 model_sel_res={}
 for key in NUISANCE_MODEL_CASES:

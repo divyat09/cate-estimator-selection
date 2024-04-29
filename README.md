@@ -1,39 +1,39 @@
 # Empirical Analysis of Model Selection for Heterogeneous Causal Effect Estimation
-Code accompanying the paper [Empirical Analysis of Model Selection for Heterogeneous Causal Effect Estimation](https://arxiv.org/abs/2211.01939)
+
+Code accompanying the paper [Empirical Analysis of Model Selection for Heterogeneous Causal Effect Estimation](https://arxiv.org/abs/2211.01939).
+The paper has been accepted at ICLR 2024 for a spotlight presentation. [OpenReview](https://openreview.net/forum?id=yuy6cGt3KL). [Talk](https://recorder-v3.slideslive.com/#/share?share=92069&s=e493bfb0-97af-47ad-82e8-c31f5e5baa98).
 
 # Brief note about the paper
 
-<img src="pipeline.png" width=55% align="right">
+<!-- <img src="main_fig.png" width=65% align="center"> -->
 
-We study the problem of model selection in causal inference, specifically for the case of conditional average treatment effect (CATE) estimation under binary treatments. Unlike model selection in machine learning, we cannot use the technique of cross-validation here as we do not observe the counterfactual potential outcome for any data point. Hence, we need to design model selection techniques that do not explicitly rely on counterfactual data. As an alternative to cross-validation, there have been a variety of proxy metrics proposed in the literature, that depend on auxiliary nuisance models also estimated from the data (propensity score model, outcome regression model). However, the effectiveness of these metrics has only been studied on synthetic datasets as we can observe the counterfactual data for them. We conduct an extensive empirical analysis to judge the performance of these metrics, where we utilize the latest advances in generative modeling to incorporate multiple realistic datasets. We evaluate 9 metrics on 144 datasets for selecting between 415 estimators per dataset, including datasets that closely mimic real-world datasets. Further, we use the latest techniques from AutoML to ensure consistent hyperparameter selection for nuisance models for a fair comparison across metrics.
+We study the problem of model selection in causal inference, specifically for conditional average treatment effect (CATE) estimation. Unlike machine learning, there is no perfect analogue of cross-validation for model selection as we do not observe the counterfactual potential outcomes. Towards this, a variety of surrogate metrics have been proposed for CATE model selection that use only observed data. However, we do not have a good understanding regarding their effectiveness due to limited comparisons in prior studies. We conduct an extensive empirical analysis to benchmark the surrogate model selection metrics introduced in the literature, as well as the novel ones introduced in this work. We ensure a fair comparison by tuning the hyperparameters associated with these metrics via AutoML, and provide more detailed trends by incorporating realistic datasets via generative modeling. Our analysis suggests novel model selection strategies based on careful hyperparameter selection of CATE estimators and causal ensembling.
 
-# Reproducibility
+# Reproducing results of the paper
 
+A script to reproduce results of the paper can be executed as follows.
+
+`python scripts/reproduce_results.py`
 
 ## Setup
 
-Please download the ACIC 2016 and ACIC 2018 datasets and place them in `$HOME/scratch/` directory.
+Please download the ACIC 2016 datasets and place them in `root_dir/acic_2016/` directory.
+
+- ACIC 2016 benchmark link: https://jenniferhill7.wixsite.com/acic-2016/competition
 
 Use the requirements.txt file for installing the dependencies.
 
-## Reproduce Results
-
-```python scripts/reproduce_results.py```
-
-## Analyzing results using logged DataFrame
-
-For ease, we have provided the final dataframe that contains the data after training all the CATE estimators across all the datasets. The corresponding file (logs_ensemble.csv) can be found in the results directory.
-
-- To generate the main table, execute the following command:
- ``` python scripts/cate_analysis.py --generate_df 0 --analysis_case ensemble_htune_pehe  ```
-
 ## Training CATE estimators
 
-To train CATE estimators and reproduce the logged DataFrame, we describe the commands ahead for the dataset ``twins`` and seed `0`. The same commands can be executed for the reamining seed values and the complete list of datasets can be constructed as follows:
+To train CATE estimators we describe the commands ahead for the dataset ``twins`` and seed `0`. The same commands can be executed for the remaining seed values and datasets.
 
-- Real Cause Datasets: `['twins', 'lalonde_psid1', 'lalonde_cps1']`
-- ACIC 2016 Datasets: Load the file `datasets/acic_2016_heterogenous_list.p`
-- ACIC 2018 Datasets: Load the file `datasets/acic_2018_heterogenous_list.p`
+First we create the train/val splits for each dataset by executing the following command for the Real Cause datasets.
+
+- `python generate_date.py --seed 0 --meta_dataset realcause` 
+
+For the case datasets in the ACIC 2016 benchmark, we create the train/val splits by executing the following command.
+
+- `python generate_date.py --seed 0 --meta_dataset acic`
 
 Before training the CATE estimator, we first need to ensure that we have selected the corresponding nuisance models via AutoML. To do the nuisance model selection for a given dataset and seed value, execute the following command:
 

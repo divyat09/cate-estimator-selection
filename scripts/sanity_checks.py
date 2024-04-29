@@ -19,12 +19,11 @@ DATASET_NAMES = [
                 ]
 
 DATASET_NAMES+= pickle.load(open('datasets/acic_2016_heterogenous_list.p', "rb"))
-# DATASET_NAMES+= pickle.load(open('datasets/acic_2018_heterogenous_list.p', "rb"))
 
-TOTAL_SEEDS= 10
+TOTAL_SEEDS= 20
 ESTIMATOR_LIST= ['dr_learner', 'dml_learner', 's_learner_upd', 'x_learner', 's_learner', 't_learner', 'causal_forest_learner']
-# ESTIMATOR_LIST= ['dr_learner', 'dml_learner', 's_learner_upd', 'x_learner']
-# ESTIMATOR_LIST= ['s_learner', 't_learner', 'causal_forest_learner']
+#ESTIMATOR_LIST= ['dr_learner', 'dml_learner', 's_learner_upd', 'x_learner']
+#ESTIMATOR_LIST= ['s_learner', 't_learner', 'causal_forest_learner']
 SCORES = ['baseline_score', 'mu_score', 'mu_iptw_score', 'value_score', 'value_dr_score', 'influence_score', 'tau_t_score', 'tau_s_score', 'tau_match_score', 'tau_iptw_score', 'tau_dr_score', 'rscore']
 
 def get_dataset_statistics(target, base_dir= RESULTS_DIR, dataset_names=DATASET_NAMES, scores=SCORES, estimator_list=ESTIMATOR_LIST):
@@ -142,7 +141,8 @@ def delete_ensemble_logs(base_dir= RESULTS_DIR, dataset_names=DATASET_NAMES, sco
 #Main Code
 target= int(sys.argv[1])
 # get_dataset_statistics(target)
-# get_nuisance_model_statistics(target)
+get_nuisance_model_statistics(target)
 # get_estimator_statistics(target)
-get_ensemble_cate_statistics(target)
+# get_ensemble_cate_statistics(target)
 # delete_ensemble_logs()
+# delete_estimator_logs()
