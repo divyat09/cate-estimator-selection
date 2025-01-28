@@ -1,7 +1,7 @@
 # Empirical Analysis of Model Selection for Heterogeneous Causal Effect Estimation
 
 Code accompanying the paper [Empirical Analysis of Model Selection for Heterogeneous Causal Effect Estimation](https://arxiv.org/abs/2211.01939).
-The paper has been accepted at ICLR 2024 for a spotlight presentation. [OpenReview](https://openreview.net/forum?id=yuy6cGt3KL).
+The paper has been accepted at ICLR 2024 for a spotlight presentation. [OpenReview](https://openreview.net/forum?id=yuy6cGt3KL) [Talk](https://iclr.cc/virtual/2024/poster/17398).
 
 # Brief note about the paper
 
